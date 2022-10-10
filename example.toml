@@ -1,0 +1,22 @@
+[mqtt]
+# URL of MQTT broker.
+# Protocol may be mqtt or mqtts.
+# Username/password may be omitted if not required.
+# Port is default 1883 for mqtt, or 8883 for mqtts.
+url = "mqtts://username:password@example.com:8883"
+
+# Topic prefix, must match whatever is set on Glow IHD configuration.
+topic = "glow"
+
+[influxdb]
+# InfluxDB v2 server URL.
+url = "https://example.com:8086/"
+
+# Organisation ID.
+org = "123456789"
+
+# Bucket ID.
+bucket = "123456789"
+
+# Authorization token with write access to specified bucket.
+token = "abcdef"

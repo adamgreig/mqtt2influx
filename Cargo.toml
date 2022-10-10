@@ -1,0 +1,28 @@
+[package]
+name = "glow2influx"
+version = "0.1.0"
+authors = ["Adam Greig <adam@adamgreig.com>"]
+edition = "2021"
+rust-version = "1.64"
+description = "Receive MQTT messages from Glow IHD and store them in InfluxDB"
+repository = "https://github.com/adamgreig/glow2influx"
+license = "Apache-2.0 OR MIT"
+
+[dependencies]
+env_logger = "0.9.1"
+serde = { version = "1.0.145", features = ["derive"] }
+rumqttc = { version = "0.17", features = ["url"] }
+tokio = { version = "1.21.2", features = ["full"] }
+toml = "0.5.9"
+thiserror = "1.0.37"
+anyhow = "1.0.65"
+clap = { version = "4.0.11", features = ["derive", "cargo"] }
+log = "0.4.17"
+fastrand = "1.8.0"
+serde_json = "1.0.86"
+time = { version = "0.3.15", features = ["serde-well-known"] }
+
+[dependencies.reqwest]
+version = "0.11.12"
+default-features = false
+features = ["rustls-tls", "json"]
