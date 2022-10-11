@@ -1,5 +1,5 @@
-use glow2influx::{Config, Glow, InfluxDb};
 use clap::Parser;
+use glow2influx::{Config, Glow, InfluxDb};
 
 #[derive(clap::Parser, Debug)]
 #[command(author, version, about)]

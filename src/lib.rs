@@ -1,6 +1,6 @@
-use std::{fs::File, path::Path, io::Read};
-use rumqttc::{MqttOptions, AsyncClient, Event, mqttbytes::v4::Packet};
 use reqwest::header::{HeaderMap, HeaderValue};
+use rumqttc::{mqttbytes::v4::Packet, AsyncClient, Event, MqttOptions};
+use std::{fs::File, io::Read, path::Path};
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -51,10 +51,10 @@ impl Config {
 
 #[derive(Clone, Debug, serde::Deserialize)]
 pub enum MeterReading {
-    #[serde(rename="electricitymeter")]
+    #[serde(rename = "electricitymeter")]
     Electricity(ElectricityMeter),
 
-    #[serde(rename="gasmeter")]
+    #[serde(rename = "gasmeter")]
     Gas(GasMeter),
 }
 
@@ -74,7 +74,7 @@ pub struct EnergyImportPrice {
 
 #[derive(Clone, Debug, serde::Deserialize)]
 pub struct ElectricityMeter {
-    #[serde(with="time::serde::rfc3339")]
+    #[serde(with = "time::serde::rfc3339")]
     pub timestamp: time::OffsetDateTime,
     pub energy: ElectricityEnergy,
     pub power: ElectricityPower,
@@ -112,7 +112,7 @@ pub struct ElectricityPower {
 
 #[derive(Clone, Debug, serde::Deserialize)]
 pub struct GasMeter {
-    #[serde(with="time::serde::rfc3339")]
+    #[serde(with = "time::serde::rfc3339")]
     pub timestamp: time::OffsetDateTime,
     pub energy: GasMeterEnergy,
 }
@@ -147,7 +147,9 @@ pub struct Glow {
 
 impl Glow {
     pub async fn subscribe(config: &Config) -> Result<Self> {
-        let random_id: String = std::iter::repeat_with(fastrand::alphanumeric).take(8).collect();
+        let random_id: String = std::iter::repeat_with(fastrand::alphanumeric)
+            .take(8)
+            .collect();
         let url = format!("{}?client_id=glow2influx-{random_id}", config.mqtt.url);
         let mut opts = MqttOptions::parse_url(url)?;
         opts.set_clean_session(true);
@@ -169,24 +171,26 @@ impl Glow {
                     Packet::Publish(publish) => {
                         log::trace!("Got MQTT publish: {publish:?}");
                         return self.process(publish);
-                    },
+                    }
                     _ => {
                         log::trace!("Unhandled incoming MQTT packet: {packet:?}");
-                    },
+                    }
                 },
                 Event::Outgoing(packet) => {
                     log::trace!("Unhandled outgoing MQTT packet: {packet:?}");
-                },
+                }
             },
             Err(err) => {
                 log::warn!("MQTT connection error: {err:?}");
-            },
+            }
         }
         None
     }
 
     fn process(&self, publish: rumqttc::mqttbytes::v4::Publish) -> Option<MeterReading> {
-        let topic = publish.topic.strip_prefix(&self.topic.strip_suffix("#").unwrap())?;
+        let topic = publish
+            .topic
+            .strip_prefix(&self.topic.strip_suffix("#").unwrap())?;
         let topic: Vec<&str> = topic.split('/').collect();
 
         let n = topic.len();
@@ -202,13 +206,11 @@ impl Glow {
         }
 
         match serde_json::from_slice(&publish.payload) {
-            Ok(reading) => {
-                Some(reading)
-            },
+            Ok(reading) => Some(reading),
             Err(err) => {
                 log::trace!("Error parsing meter reading: {err:?}");
                 None
-            },
+            }
         }
     }
 }
@@ -225,7 +227,10 @@ impl InfluxDb {
         let mut auth_value = HeaderValue::from_str(&token)?;
         auth_value.set_sensitive(true);
         headers.insert("Authorization", auth_value);
-        headers.insert("Content-Type", HeaderValue::from_static("text/plain; charset=utf-8"));
+        headers.insert(
+            "Content-Type",
+            HeaderValue::from_static("text/plain; charset=utf-8"),
+        );
         headers.insert("Accept", HeaderValue::from_static("application/json"));
 
         let client = reqwest::Client::builder()
@@ -258,7 +263,8 @@ impl InfluxDb {
         let cumulative = elec.energy.import.cumulative;
         let price = elec.energy.import.price.unitrate;
         let standing = elec.energy.import.price.standingcharge;
-        let line = format!("electricity,mpan={mpan} \
+        let line = format!(
+            "electricity,mpan={mpan} \
             power={power},cumulative={cumulative},price={price},standing={standing} \
             {ts}"
         );
@@ -272,7 +278,8 @@ impl InfluxDb {
         let cumulative = gas.energy.import.cumulative;
         let price = gas.energy.import.price.unitrate;
         let standing = gas.energy.import.price.standingcharge;
-        let line = format!("gas,mprn={mprn} \
+        let line = format!(
+            "gas,mprn={mprn} \
             cumulative={cumulative},price={price},standing={standing} \
             {ts}"
         );
