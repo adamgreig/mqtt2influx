@@ -190,7 +190,7 @@ impl Glow {
     fn process(&self, publish: rumqttc::mqttbytes::v4::Publish) -> Option<MeterReading> {
         let topic = publish
             .topic
-            .strip_prefix(&self.topic.strip_suffix("#").unwrap())?;
+            .strip_prefix(&self.topic.strip_suffix('#').unwrap())?;
         let topic: Vec<&str> = topic.split('/').collect();
 
         let n = topic.len();
