@@ -260,12 +260,12 @@ impl InfluxDb {
         let ts = elec.timestamp.unix_timestamp();
         let mpan = elec.energy.import.mpan;
         let power = elec.power.value;
-        let cumulative = elec.energy.import.cumulative;
+        let reading = elec.energy.import.cumulative;
         let price = elec.energy.import.price.unitrate;
         let standing = elec.energy.import.price.standingcharge;
         let line = format!(
             "electricity,mpan={mpan} \
-            power={power},cumulative={cumulative},price={price},standing={standing} \
+            power={power},cumulative={reading},price={price},standing={standing} \
             {ts}"
         );
         log::trace!("Submitting electricity reading: {line}");
@@ -275,12 +275,13 @@ impl InfluxDb {
     async fn submit_gas(&mut self, gas: GasMeter) -> Result<()> {
         let ts = gas.timestamp.unix_timestamp();
         let mprn = gas.energy.import.mprn;
-        let cumulative = gas.energy.import.cumulative;
+        let reading = gas.energy.import.cumulative;
+        let readingvol = gas.energy.import.cumulativevol;
         let price = gas.energy.import.price.unitrate;
         let standing = gas.energy.import.price.standingcharge;
         let line = format!(
             "gas,mprn={mprn} \
-            cumulative={cumulative},price={price},standing={standing} \
+            cumulative={reading},cumulativevol={readingvol},price={price},standing={standing} \
             {ts}"
         );
         log::trace!("Submitting gas reading: {line}");
