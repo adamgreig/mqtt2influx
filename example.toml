@@ -1,12 +1,23 @@
+[[glow]]
+# Topic that Glow unit is configured for and its ID.
+topic = "glow/12345678"
+# InfluxDB bucket ID to save Glow readings into.
+bucket = "123456789"
+
+[[tasmota_plug]]
+# Topic that Tasmota is configured for, including prefix and ID.
+topic = "tele/tasmota_123456"
+# Friendly name to tag this Tasmota's readings in Influx
+name = "TV"
+# InfluxDB bucket ID to save readings into.
+bucket = "987654321"
+
 [mqtt]
 # URL of MQTT broker.
 # Protocol may be mqtt or mqtts.
 # Username/password may be omitted if not required.
 # Port is default 1883 for mqtt, or 8883 for mqtts.
 url = "mqtts://username:password@example.com:8883"
-
-# Topic prefix, must match whatever is set on Glow IHD configuration.
-topic = "glow"
 
 [influxdb]
 # InfluxDB v2 server URL.
@@ -15,8 +26,5 @@ url = "https://example.com:8086/"
 # Organisation ID.
 org = "123456789"
 
-# Bucket ID.
-bucket = "123456789"
-
-# Authorization token with write access to specified bucket.
+# Authorization token with write access to specified buckets.
 token = "abcdef"

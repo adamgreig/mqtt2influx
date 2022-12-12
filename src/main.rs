@@ -1,5 +1,5 @@
 use clap::Parser;
-use glow2influx::{Config, Glow, InfluxDb};
+use mqtt2influx::{Config, Router};
 
 #[derive(clap::Parser, Debug)]
 #[command(author, version, about)]
@@ -17,27 +17,21 @@ async fn main() -> anyhow::Result<()> {
     let args = Args::parse();
 
     let env = match args.verbose {
-        0 => env_logger::Env::default().default_filter_or("glow2influx=warn"),
-        1 => env_logger::Env::default().default_filter_or("glow2influx=info"),
-        2 => env_logger::Env::default().default_filter_or("glow2influx=debug"),
-        3.. => env_logger::Env::default().default_filter_or("glow2influx=trace"),
+        0 => env_logger::Env::default().default_filter_or("mqtt2influx=warn"),
+        1 => env_logger::Env::default().default_filter_or("mqtt2influx=info"),
+        2 => env_logger::Env::default().default_filter_or("mqtt2influx=debug"),
+        3.. => env_logger::Env::default().default_filter_or("mqtt2influx=trace"),
     };
     env_logger::Builder::from_env(env).init();
 
     log::info!("Reading config from {:?}", args.config_file);
     let config = Config::from_path(args.config_file)?;
 
-    let mut influx = InfluxDb::new(&config)?;
-
-    log::info!("Subscribing to messages from Glow");
-    let mut glow = Glow::subscribe(&config).await?;
+    let mut router = Router::connect(&config).await?;
 
     loop {
-        if let Some(reading) = glow.poll().await {
-            log::info!("Got reading: {reading:?}");
-            if let Err(err) = influx.submit(reading).await {
-                log::warn!("Error submitting to Influx: {err:?}");
-            }
+        if let Err(err) = router.poll().await {
+            log::warn!("Error processing message: {err:?}");
         }
     }
 }
