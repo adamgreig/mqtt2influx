@@ -1,4 +1,4 @@
-use crate::{Error, Result, Submission, Submittable, Mqtt, MqttMessage};
+use crate::{Error, Result, Submission, Submittable, MqttMessage};
 
 #[derive(Clone, Debug, serde::Deserialize)]
 pub(crate) struct GlowConfig {
@@ -147,17 +147,17 @@ impl Glow {
         Glow { config: config.clone() }
     }
 
-    pub(crate) async fn from_configs(
+    pub(crate) fn from_configs(
         configs: &[GlowConfig],
-        mqtt: &Mqtt,
+        topics: &mut Vec<String>,
         submittables: &mut Vec<(String, Box<dyn Submittable>)>,
     ) -> Result<()> {
         for cfg in configs.iter() {
             let topic = cfg.topic.clone();
             if topic.ends_with('/') {
-                return Err(Error::ConfigTopicSlash(topic.clone()));
+                return Err(Error::ConfigTopicSlash(topic));
             }
-            mqtt.subscribe(&format!("{}/#", topic)).await?;
+            topics.push(format!("{}/#", topic));
             let glow = Box::new(Glow::new(cfg));
             submittables.push((topic, glow));
         }

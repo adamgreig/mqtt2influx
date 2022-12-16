@@ -25,13 +25,14 @@ impl Mqtt {
         let url = format!("{}?client_id=mqtt2influx-{random_id}", config.url);
         let mut opts = MqttOptions::parse_url(url)?;
         opts.set_clean_session(true);
-        let (client, event_loop) = AsyncClient::new(opts, 12);
+        let (client, event_loop) = AsyncClient::new(opts, 512);
         Ok(Self { client, event_loop })
     }
 
-    pub(crate) async fn subscribe(&self, topic: &str) -> Result<()> {
+    pub(crate) async fn subscribe(&mut self, topic: &str) -> Result<()> {
         log::debug!("Subscribing to topic {topic:?}");
-        self.client.subscribe(topic, rumqttc::QoS::AtMostOnce).await?;
+        self.client.try_subscribe(topic, rumqttc::QoS::AtMostOnce)?;
+        self.poll().await;
         Ok(())
     }
 

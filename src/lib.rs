@@ -69,16 +69,20 @@ pub struct Router {
 impl Router {
     pub async fn connect(config: &Config) -> Result<Self> {
         let influx = InfluxDb::new(&config.influxdb)?;
-        let mqtt = Mqtt::connect(&config.mqtt).await?;
+        let mut mqtt = Mqtt::connect(&config.mqtt).await?;
         let mut submittables: Vec<(String, Box<dyn Submittable>)> = Vec::new();
+        let mut topics: Vec<String> = Vec::new();
         if let Some(glows) = &config.glow {
-            Glow::from_configs(glows, &mqtt, &mut submittables).await?;
+            Glow::from_configs(glows, &mut topics, &mut submittables)?;
         }
         if let Some(plugs) = &config.tasmota_plug {
-            TasmotaPlug::from_configs(plugs, &mqtt, &mut submittables).await?;
+            TasmotaPlug::from_configs(plugs, &mut topics, &mut submittables)?;
         }
         if let Some(zigbees) = &config.zigbee {
-            Zigbee::from_configs(zigbees, &mqtt, &mut submittables).await?;
+            Zigbee::from_configs(zigbees, &mut topics, &mut submittables)?;
+        }
+        for topic in topics {
+            mqtt.subscribe(&topic).await?;
         }
         Ok(Router { mqtt, influx, submittables })
     }

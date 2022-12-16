@@ -1,4 +1,4 @@
-use crate::{Error, Result, Mqtt, MqttMessage, Submission, Submittable};
+use crate::{Error, Result, MqttMessage, Submission, Submittable};
 
 #[derive(Clone, Debug, serde::Deserialize)]
 pub(crate) struct TasmotaPlugConfig {
@@ -56,17 +56,17 @@ impl TasmotaPlug {
         Self { config: config.clone() }
     }
 
-    pub(crate) async fn from_configs(
+    pub(crate) fn from_configs(
         configs: &[TasmotaPlugConfig],
-        mqtt: &Mqtt,
+        topics: &mut Vec<String>,
         submittables: &mut Vec<(String, Box<dyn Submittable>)>,
     ) -> Result<()> {
         for cfg in configs.iter() {
             let topic = cfg.topic.clone();
             if topic.ends_with('/') {
-                return Err(Error::ConfigTopicSlash(topic.clone()));
+                return Err(Error::ConfigTopicSlash(topic));
             }
-            mqtt.subscribe(&format!("{}/#", topic)).await?;
+            topics.push(format!("{}/#", topic));
             let plug = Box::new(TasmotaPlug::new(cfg));
             submittables.push((topic, plug));
         }
