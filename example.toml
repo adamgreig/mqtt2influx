@@ -12,6 +12,18 @@ name = "TV"
 # InfluxDB bucket ID to save readings into.
 bucket = "987654321"
 
+[[zigbee]]
+# Topic for this particular zigbee2mqtt report.
+topic = "zigbee2mqtt/mydevice"
+# Friendly name to tag this device with in Influx
+name = "My Device"
+# InfluxDB bucket ID to save readings into.
+bucket = "987654321"
+# InfluxDB measurement to use for readings.
+measurement = "climate"
+# Which numeric keys to extract from the payload JSON
+keys = [ "temperature", "humidity", "battery" ]
+
 [mqtt]
 # URL of MQTT broker.
 # Protocol may be mqtt or mqtts.

@@ -4,10 +4,12 @@ mod influxdb;
 mod mqtt;
 mod glow;
 mod tasmota_plug;
+mod zigbee;
 use influxdb::{InfluxDb, InfluxDbConfig};
 use mqtt::{Mqtt, MqttConfig, MqttMessage};
 use glow::{Glow, GlowConfig};
 use tasmota_plug::{TasmotaPlug, TasmotaPlugConfig};
+use zigbee::{Zigbee, ZigbeeConfig};
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -46,6 +48,7 @@ pub struct Config {
     influxdb: InfluxDbConfig,
     glow: Option<Vec<GlowConfig>>,
     tasmota_plug: Option<Vec<TasmotaPlugConfig>>,
+    zigbee: Option<Vec<ZigbeeConfig>>,
 }
 
 impl Config {
@@ -69,26 +72,13 @@ impl Router {
         let mqtt = Mqtt::connect(&config.mqtt).await?;
         let mut submittables: Vec<(String, Box<dyn Submittable>)> = Vec::new();
         if let Some(glows) = &config.glow {
-            for glow in glows.iter() {
-                let topic = glow.topic.clone();
-                if topic.ends_with('/') {
-                    return Err(Error::ConfigTopicSlash(topic.clone()));
-                }
-                mqtt.subscribe(&format!("{}/#", topic)).await?;
-                let glow = Box::new(Glow::new(glow));
-                submittables.push((topic, glow));
-            }
+            Glow::from_configs(glows, &mqtt, &mut submittables).await?;
         }
         if let Some(plugs) = &config.tasmota_plug {
-            for plug in plugs.iter() {
-                let topic = plug.topic.clone();
-                if topic.ends_with('/') {
-                    return Err(Error::ConfigTopicSlash(topic.clone()));
-                }
-                mqtt.subscribe(&format!("{}/#", topic)).await?;
-                let plug = Box::new(TasmotaPlug::new(plug));
-                submittables.push((topic, plug));
-            }
+            TasmotaPlug::from_configs(plugs, &mqtt, &mut submittables).await?;
+        }
+        if let Some(zigbees) = &config.zigbee {
+            Zigbee::from_configs(zigbees, &mqtt, &mut submittables).await?;
         }
         Ok(Router { mqtt, influx, submittables })
     }
