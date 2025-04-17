@@ -31,6 +31,8 @@ impl ZigbeeReading {
             if let Some(v) = msg.get(k) {
                 if let Some(v) = v.as_f64() {
                     values.insert(k.clone(), v);
+                } else if let Some(v) = v.as_bool() {
+                    values.insert(k.clone(), v as u32 as f64);
                 }
             }
         }
